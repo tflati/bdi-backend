@@ -556,8 +556,9 @@ def get_ccle_infos():
     txt_file = open(os.path.dirname(__file__) + "/ccle_ids.txt", "r")
     next(txt_file)
     for line in txt_file:
+        line = line.rstrip()
         words = line.split("\t")
-        rows.append([words[0].replace(" ",""),words[1],words[2],words[3].replace("\n","")])
+        rows.append([words[0].rstrip(),words[1],words[2],words[3]])
         #print(words)
     
     response = {"header": header, "items": rows}
@@ -605,6 +606,8 @@ def get_distribution(request, node1, node2, howmany, sorting):
     header = []
     items = []
     
+    header_translation = get_ccle_infos()
+    
     lines = open(os.path.dirname(__file__) + "/statistics/" + node1 + "_" + node2 + ".csv")
     line_no = 0
     for line in lines:
@@ -630,6 +633,15 @@ def get_distribution(request, node1, node2, howmany, sorting):
     if howmany >= 0 and len(items) > howmany:
         items = items[:howmany]
         header = header[:howmany]
+    
+    header = list(header)
+    
+    if node1 == "CellLine":
+        for i,item in enumerate(header):
+            for ccle in header_translation["items"]:
+                if ccle[0] == item:
+                    header[i] = ccle[1]
+                    break
     
     response['details'] = {"labels": labels, "header": header, "items": items}
     
