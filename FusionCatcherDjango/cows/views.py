@@ -4,7 +4,7 @@ from django.http import HttpResponse
 import random
 
 # Create your views here.
-def get_distribution(request, node1, node2, howmany, sorting):
+def get_distribution(request, node1, node2, howmany, sorting, parameter):
     
     if not howmany: howmany = -1
     howmany = int(howmany)
@@ -21,7 +21,7 @@ def get_distribution(request, node1, node2, howmany, sorting):
     if format == "tsv": field_delimiter = "\t"
     elif format == "csv" : field_delimiter = ","
     
-    lines = open(os.path.dirname(__file__) + "/statistics/" + node1 + "_" + node2 + "." + format)
+    lines = open(os.path.dirname(__file__) + "/statistics/" + node1 + "_" + node2 + ("_" +parameter if parameter else "") + "." + format)
     line_no = 0
     for line in lines:
         line_no += 1

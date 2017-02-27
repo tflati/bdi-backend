@@ -20,6 +20,7 @@ from app import views
 
 urlpatterns = [
     url(r'^cows/', include('cows.urls')),
+    url(r'^rap/', include('rap.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^chromosomes/(.+)/(.+)/(.+)/(.+)/', views.search_for_chromosome, name='search_for_chromosome'),
     url(r'^cell_line/(.+)/', views.search_for_cell_line, name='search_for_cell_line'),

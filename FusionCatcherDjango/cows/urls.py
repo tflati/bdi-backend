@@ -17,7 +17,7 @@ from django.conf.urls import url
 from cows import views
 
 urlpatterns = [
-    url(r'^get_distribution/(\w+)/(\w+)/(\d*)/?(\w*)/?$', views.get_distribution, name='get_distribution'),
+    url(r'^get_distribution/(\w+)/(\w+)/(\d*)/?(\w*)/?(\w*)/?$', views.get_distribution, name='get_distribution'),
     url(r'^statistics_all/', views.statistics_all, name='statistics_all'),
     url(r'^get_list/(\w+)/(\w+)/(\w+)/(\d*)/?(\w*)/?$', views.get_list, name='get_list'),
 ]

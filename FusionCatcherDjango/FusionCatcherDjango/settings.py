@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ["localhost"]
 INSTALLED_APPS = [
     'app',
     'cows',
+    'rap',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
