@@ -19,6 +19,7 @@ from app import views
 # url(r'^app/', include('app.urls')),
 
 urlpatterns = [
+    url(r'^peach/', include('peach.urls')),
     url(r'^cows/', include('cows.urls')),
     url(r'^rap/', include('rap.urls')),
     url(r'^admin/', admin.site.urls),
