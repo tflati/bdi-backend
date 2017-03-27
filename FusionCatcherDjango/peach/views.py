@@ -3,7 +3,9 @@ import json
 import csv
 from django.http import HttpResponse
 
-from models import Chromosome, Sample
+from models import Variant, Sample
+
+MAX_RESULTS_NUMBER = 1000
 
 # Create your views here.
 def get_info_all(request, type, howmany):
@@ -49,6 +51,94 @@ def get_info_all(request, type, howmany):
     response['details'] = {"header": header, "items": items}
     
     return HttpResponse(json.dumps(response))
+
+def get_chromosomes(request):
+    filename = "chromosomes.txt"
+    return HttpResponse(json.dumps([line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
+
+def get_genes(request):
+    filename = "genes.txt"
+    return HttpResponse(json.dumps([line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
+
+def get_genes_info():
+    filename = "genes.gff"
+    
+    genes = []
+    for line in open(os.path.dirname(__file__) + "/data/" + filename):
+        if line.startswith("#"): continue
+        line = line.rstrip()
+        pieces = line.split("\t")
+        chrom = pieces[0]
+        type = pieces[2]
+        start = pieces[3]
+        end = pieces[4]
+        ID = pieces[8].split(";")[0].replace("ID=", "")
+        
+        gene = {"chrom": chrom, "type": type, "start": start, "end": end, "ID": ID}
+        genes.append(gene)
+    
+    return genes
+
+def get_gene_types(request):
+    filename = "gene_types.txt"
+    return HttpResponse(json.dumps(["NONE"] + [line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
+
+def get_cultivars(request):
+    filename = "cultivars.txt"
+    return HttpResponse(json.dumps([line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
+
+def search_by_chromosome(request, chromosome, start, end, include_snps = True, include_indels = True):
+    
+    data = []
+    header = ['ID', 'pos', 'ref', 'alt', 'type']
+    
+    include_indels = include_indels.lower() == "true"
+    include_snps = include_snps.lower() == "true"    
+    
+    print(include_indels, include_snps)
+    
+    total = 0
+    for variant in Variant.nodes.filter(chrom__exact=chromosome).filter(pos__gte=start).filter(pos__lte=end)[0: MAX_RESULTS_NUMBER]:
+        
+        if total >= MAX_RESULTS_NUMBER: break
+        if variant.type == "SNP" and not include_snps: continue
+        if variant.type == "INDEL" and not include_indels: continue
+        
+        var = [variant.ID, variant.pos, variant.ref, variant.alt, variant.type]
+        data.append(var)
+        total += 1
+
+    response = {'header': header, 'items': data, 'length': total}
+
+    return HttpResponse(json.dumps(response))
+
+def search_by_gene(request, gene_type, gene_name):
+    
+    data = []
+    header = ['ID', 'pos', 'ref', 'alt', 'type']
+    
+    print("REQ: " + gene_type + " NAME="+gene_name)    
+    genes = [gene for gene in get_genes_info() if gene["type"] == gene_type or gene["ID"] == gene_name]
+    
+    print("Genes found: " + str(len(genes)))
+
+    total = 0
+    for gene in genes:
+        if total >= MAX_RESULTS_NUMBER: break
+        
+        print("Total="+str(total) + " - Searching for gene="+str(gene))
+        for variant in Variant.nodes.filter(chrom__exact=gene["chrom"]).filter(pos__gte=gene["start"]).filter(pos__lte=gene["end"])[0:MAX_RESULTS_NUMBER]:
+             
+            if total >= MAX_RESULTS_NUMBER: break
+             
+            var = [variant.ID, variant.pos, variant.ref, variant.alt, variant.type]
+            data.append(var)
+            total += 1
+
+    response = {'header': header, 'items': data, 'length': total}
+
+    return HttpResponse(json.dumps(response))
+
 
 def get_distribution(request, node1, node2, howmany, sorting, parameter):
     
@@ -126,17 +216,17 @@ def generate_statistics(request):
     
     print(len(Sample.nodes))
     for cultivar in Sample.nodes.all():
-#         n = len(cultivar.hasInfo)
+        n = len(cultivar.hasInfo)
 #         print(str(cultivar) + " " + str(n))
-        print(cultivar)
-        snps = indels = 0
-        for info in cultivar.hasInfo:
-            type = info.variant.type
-            if type == "INDEL":
-                indels += 1
-            elif type == "SNP":
-                snps += 1
-        writer.writerow([cultivar.ID, snps])
+#         print(cultivar)
+#         snps = indels = 0
+#         for info in cultivar.hasInfo:
+#             type = info.variant.type
+#             if type == "INDEL":
+#                 indels += 1
+#             elif type == "SNP":
+#                 snps += 1
+        writer.writerow([cultivar.ID, n])
         
     file.close()
     

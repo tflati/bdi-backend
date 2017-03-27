@@ -1,0 +1,5 @@
+CDS
+five_prime_UTR
+gene
+mRNA
+three_prime_UTR

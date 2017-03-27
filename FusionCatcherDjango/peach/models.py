@@ -25,7 +25,7 @@ class Variant(StructuredNode):
     ID = StringProperty(Required=True)
     
     chrom = StringProperty()
-    pos = IntegerProperty()
+    pos = StringProperty()
     ref = StringProperty()
     alt = StringProperty()
     type = StringProperty()
