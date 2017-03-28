@@ -3,7 +3,10 @@ import json
 import csv
 from django.http import HttpResponse
 
+from django.views.decorators.csrf import ensure_csrf_cookie
+
 from models import Variant, Sample
+from collections import Set
 
 MAX_RESULTS_NUMBER = 1000
 
@@ -79,13 +82,62 @@ def get_genes_info():
     
     return genes
 
+def get_cultivars_info():
+    filename = "PEACH_CODE.txt"
+    
+    cultivars = []
+    for line in open(os.path.dirname(__file__) + "/data/" + filename):
+        if line.startswith("#"): continue
+        line = line.rstrip()
+        pieces = line.split("\t")
+        cultivar = pieces[0]
+        sample_name = pieces[1]
+        
+        cultivar = {"name": cultivar, "sample": sample_name}
+        cultivars.append(cultivar)
+    
+    return cultivars
+
 def get_gene_types(request):
     filename = "gene_types.txt"
-    return HttpResponse(json.dumps(["NONE"] + [line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
+    return HttpResponse(json.dumps([line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
 
 def get_cultivars(request):
     filename = "cultivars.txt"
     return HttpResponse(json.dumps([line.rstrip('\n') for line in open(os.path.dirname(__file__) + "/data/" + filename)]))
+
+@ensure_csrf_cookie
+def search_by_cultivar(request):
+    # if request.method == "POST":
+    print(request)
+    
+    cultivars = json.loads(request.body)[0]
+    print("CULTIVARS:" + str(cultivars))
+    
+    data = set()
+    header = ['ID', 'pos', 'ref', 'alt', 'type']
+    
+    cultivar_info = get_cultivars_info()
+    samples = []
+    for info in cultivar_info:
+        if info["name"] in cultivars:
+            samples.append(info["sample"])
+    print("CULTIVARS:" + str(samples))
+    
+    for cultivar in Sample.nodes.filter(ID__in=samples):
+        
+        for variantInfo in cultivar.hasInfo[0: MAX_RESULTS_NUMBER]:
+            
+            if len(data) >= MAX_RESULTS_NUMBER: break
+            
+            for variant in variantInfo.variant:
+                var = (variant.ID, variant.pos, variant.ref, variant.alt, variant.type)
+                data.add(var)
+
+    print(str(len(data)) + " results")
+    response = {'header': header, 'items': [list(el) for el in data], 'length': len(data)}
+
+    return HttpResponse(json.dumps(response))
 
 def search_by_chromosome(request, chromosome, start, end, include_snps = True, include_indels = True):
     
@@ -112,12 +164,18 @@ def search_by_chromosome(request, chromosome, start, end, include_snps = True, i
 
     return HttpResponse(json.dumps(response))
 
+def search_by_gene_type(request, gene_type):
+    return search_by_gene(request, gene_type, None)
+    
+def search_by_gene_name(request, gene_name):
+    return search_by_gene(request, None, gene_name)
+    
 def search_by_gene(request, gene_type, gene_name):
     
     data = []
     header = ['ID', 'pos', 'ref', 'alt', 'type']
     
-    print("REQ: " + gene_type + " NAME="+gene_name)    
+    print("REQ: " + str(gene_type) + " NAME="+str(gene_name))    
     genes = [gene for gene in get_genes_info() if gene["type"] == gene_type or gene["ID"] == gene_name]
     
     print("Genes found: " + str(len(genes)))

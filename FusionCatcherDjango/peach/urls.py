@@ -25,5 +25,7 @@ urlpatterns = [
     url(r'^cultivars/', views.get_cultivars, name='get_cultivars'),
     url(r'generate_statistics/*$', views.generate_statistics, name='generate_statistics'),
     url(r'search_by_chromosome/(\w+)/(\d+)/(\d+)/?(\w+)/?(\w+)/$', views.search_by_chromosome, name='search_by_chromosome'),
-    url(r'search_by_gene/(\w+)/(.+)/$', views.search_by_gene, name='search_by_gene'),
+    url(r'search_by_gene_type/(\w+)/$', views.search_by_gene_type, name='search_by_gene_type'),
+    url(r'search_by_gene_name/(\w+)/$', views.search_by_gene_name, name='search_by_gene_name'),
+    url(r'search_by_cultivar/$', views.search_by_cultivar, name='search_by_cultivar'),
 ]
