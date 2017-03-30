@@ -108,14 +108,12 @@ def get_cultivars(request):
 
 @ensure_csrf_cookie
 def search_by_cultivar(request):
-    # if request.method == "POST":
-    print(request)
     
     cultivars = json.loads(request.body)[0]
     print("CULTIVARS:" + str(cultivars))
     
     data = set()
-    header = ['ID', 'pos', 'ref', 'alt', 'type']
+    header = ['ID', 'pos', 'ref', 'alt', 'type', 'sample(s)']
     
     cultivar_info = get_cultivars_info()
     samples = []
@@ -131,7 +129,7 @@ def search_by_cultivar(request):
             if len(data) >= MAX_RESULTS_NUMBER: break
             
             for variant in variantInfo.variant:
-                var = (variant.ID, variant.pos, variant.ref, variant.alt, variant.type)
+                var = (variant.ID, variant.pos, variant.ref, variant.alt, variant.type, len(variantInfo.sampleInfo))
                 data.add(var)
 
     print(str(len(data)) + " results")
@@ -142,12 +140,10 @@ def search_by_cultivar(request):
 def search_by_chromosome(request, chromosome, start, end, include_snps = True, include_indels = True):
     
     data = []
-    header = ['ID', 'pos', 'ref', 'alt', 'type']
+    header = ['ID', 'pos', 'ref', 'alt', 'type', 'sample(s)']
     
     include_indels = include_indels.lower() == "true"
-    include_snps = include_snps.lower() == "true"    
-    
-    print(include_indels, include_snps)
+    include_snps = include_snps.lower() == "true"
     
     total = 0
     for variant in Variant.nodes.filter(chrom__exact=chromosome).filter(pos__gte=start).filter(pos__lte=end)[0: MAX_RESULTS_NUMBER]:
@@ -156,7 +152,11 @@ def search_by_chromosome(request, chromosome, start, end, include_snps = True, i
         if variant.type == "SNP" and not include_snps: continue
         if variant.type == "INDEL" and not include_indels: continue
         
-        var = [variant.ID, variant.pos, variant.ref, variant.alt, variant.type]
+        samples = 0
+        for info in variant.info:
+            samples = len(info.sampleInfo)
+        
+        var = [variant.ID, variant.pos, variant.ref, variant.alt, variant.type, samples]
         data.append(var)
         total += 1
 
@@ -173,7 +173,7 @@ def search_by_gene_name(request, gene_name):
 def search_by_gene(request, gene_type, gene_name):
     
     data = []
-    header = ['ID', 'pos', 'ref', 'alt', 'type']
+    header = ['ID', 'pos', 'ref', 'alt', 'type', 'sample(s)']
     
     print("REQ: " + str(gene_type) + " NAME="+str(gene_name))    
     genes = [gene for gene in get_genes_info() if gene["type"] == gene_type or gene["ID"] == gene_name]
@@ -188,8 +188,12 @@ def search_by_gene(request, gene_type, gene_name):
         for variant in Variant.nodes.filter(chrom__exact=gene["chrom"]).filter(pos__gte=gene["start"]).filter(pos__lte=gene["end"])[0:MAX_RESULTS_NUMBER]:
              
             if total >= MAX_RESULTS_NUMBER: break
-             
-            var = [variant.ID, variant.pos, variant.ref, variant.alt, variant.type]
+            
+            total = 0
+            for variantInfo in variant.info:
+                total += len(variantInfo.sampleInfo)
+            
+            var = [variant.ID, variant.pos, variant.ref, variant.alt, variant.type, total]
             data.append(var)
             total += 1
 
