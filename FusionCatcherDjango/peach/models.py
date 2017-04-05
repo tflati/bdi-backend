@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
-from neomodel import (config, StructuredNode, StringProperty, IntegerProperty, ArrayProperty, JSONProperty, FloatProperty, StructuredRel, RelationshipTo, RelationshipFrom)
-
-config.DATABASE_URL = 'bolt://neo4j:password@localhost:7689'  # default
+from neomodel import (StructuredNode, StringProperty, IntegerProperty, ArrayProperty, JSONProperty, FloatProperty, StructuredRel, RelationshipTo, RelationshipFrom)
 
 # Create your models here.
 

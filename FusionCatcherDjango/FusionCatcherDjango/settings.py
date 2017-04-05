@@ -31,7 +31,7 @@ ALLOWED_HOSTS = ["localhost"]
 # Application definition
 
 INSTALLED_APPS = [
-    'app',
+    'fusion',
     'cows',
     'rap',
     'django.contrib.admin',
@@ -121,6 +121,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-
-from neomodel import config
-config.DATABASE_URL = 'bolt://neo4j:password@localhost:7687'
