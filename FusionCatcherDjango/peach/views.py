@@ -11,6 +11,75 @@ from collections import Set
 MAX_RESULTS_NUMBER = 1000
 
 # Create your views here.
+def get_total_stats(request):
+
+    snps = get_stats_of_type("TOTAL_SNPS")[0]
+    indels = get_stats_of_type("TOTAL_INDELS")[0]
+    total = ["Cultivar number", 146]
+
+    data = {}
+    data["details"] = {"header": [], "items": [snps, indels, total]}
+
+    return HttpResponse(json.dumps(data))
+
+def get_stats_of_type(stat_type):
+    data = []
+    raw_file = os.path.dirname(__file__) + "/statistics/statistics.txt"
+    #Per leggere la prima colonna e riportare tutti i campi
+    with open(raw_file) as stat_file:
+        for i in stat_file.readlines():
+            i = i.rstrip()
+            cols=i.split('\t')
+            if stat_type in cols[0]:
+                data.append(cols[1:])
+    stat_file.close()
+
+    return data
+
+def get_info_all_simple(request, type, howmany):
+    
+    if not howmany: howmany = -1
+    howmany = int(howmany)
+    
+    response = {}
+    header = []
+    items = []
+    
+#     header_translation = get_ccle_infos()
+    
+    filename = "Accession_number_peach_1."+type+".tsv"
+
+    format = filename.split(".")[-1]
+    field_delimiter = "|"
+    if format == "tsv": field_delimiter = "\t"
+    elif format == "csv" : field_delimiter = ","
+    
+    lines = open(os.path.dirname(__file__) + "/data/" + filename)
+    line_no = 0
+    for line in lines:
+        line_no += 1
+        
+        line = line.rstrip()
+        
+        if line_no == 1:
+            if line.startswith("#"):
+                line = line[1:]
+            header = [el.title() if not el.isupper() else el for el in line.split(field_delimiter)[0:3]]
+            continue
+        
+        else:
+
+            items.append(line.split(field_delimiter)[0:3])
+
+    lines.close()
+    
+    if howmany >= 0 and len(items) > howmany:
+        items = items[:howmany]
+
+    response['details'] = {"header": header, "items": items}
+    
+    return HttpResponse(json.dumps(response))
+
 def get_info_all(request, type, howmany):
     
     if not howmany: howmany = -1

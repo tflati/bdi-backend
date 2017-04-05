@@ -18,6 +18,7 @@ from peach import views
 
 urlpatterns = [
     url(r'get_info_all/(\w+)/?(\d*)/$', views.get_info_all, name='get_info_all'),
+    url(r'get_info_all_simple/(\w+)/?(\d*)/$', views.get_info_all_simple, name='get_info_all_simple'),
     url(r'^get_distribution/(\w+)/(\w+)/(\d*)/?(\w*)/?(\w*)/?$', views.get_distribution, name='get_distribution'),
     url(r'^chromosomes/', views.get_chromosomes, name='get_chromosomes'),
     url(r'^genes/', views.get_genes, name='get_genes'),
@@ -28,4 +29,5 @@ urlpatterns = [
     url(r'search_by_gene_type/(\w+)/$', views.search_by_gene_type, name='search_by_gene_type'),
     url(r'search_by_gene_name/(.+)/$', views.search_by_gene_name, name='search_by_gene_name'),
     url(r'search_by_cultivar/$', views.search_by_cultivar, name='search_by_cultivar'),
+    url(r'get_total_stats/$', views.get_total_stats, name='get_statistics'),
 ]
